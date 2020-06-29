@@ -9,9 +9,9 @@
 -- TODO: Introduce specialized matrix multiply, inverse, ecc ecc using BLAS
 -- TODO: (when available) based on the results summarized in Mike Giles paper.
 
--- PERF: We considered one-shot version with matrix-tape which computes the 
--- PERF: gradient in one function call but gains where not substantial and 
--- PERF: memory management is more complicated. Probably better to just 
+-- PERF: We considered one-shot version with matrix-tape which computes the
+-- PERF: gradient in one function call but gains where not substantial and
+-- PERF: memory management is more complicated. Probably better to just
 -- PERF: introduce reverse-mode differentiation directly.
 
 local ffi  = require "ffi"
@@ -21,12 +21,12 @@ local math = require "sci.math"
 local type = type
 
 local
-abs, acos, asin, atan, atan2, ceil, cos, cosh, deg, exp, floor, fmod, frexp,
-huge, ldexp, log, log10, max, min, modf, pi, pow, rad, random, randomseed, sin, 
-sinh, sqrt, tan, tanh,
-round, step, sign,
-phi, iphi, gamma, loggamma, logbeta, beta
-= xsys.from(math, [[
+  abs, acos, asin, atan, atan2, ceil, cos, cosh, deg, exp, floor, fmod, frexp,
+  huge, ldexp, log, log10, max, min, modf, pi, pow, rad, random, randomseed, sin,
+  sinh, sqrt, tan, tanh,
+  round, step, sign,
+  phi, iphi, gamma, loggamma, logbeta, beta
+  = xsys.from(math, [[
 abs, acos, asin, atan, atan2, ceil, cos, cosh, deg, exp, floor, fmod, frexp,
 huge, ldexp, log, log10, max, min, modf, pi, pow, rad, random, randomseed, sin, 
 sinh, sqrt, tan, tanh,
@@ -43,7 +43,7 @@ do
   -- r(10).
   local gamma_r10 = 10.900511
   -- dk[0], ..., dk[10].
-  local gamma_dk = ffi.new("double[11]", 
+  local gamma_dk = ffi.new("double[11]",
     2.48574089138753565546e-5,
     1.05142378581721974210,
     -3.45687097222016235469,
@@ -61,47 +61,47 @@ do
   -- Lanczos approximation, see:
   -- Pugh[2004]: AN ANALYSIS OF THE LANCZOS GAMMA APPROXIMATION
   -- http://bh0.physics.ubc.ca/People/matt/Doc/ThesesOthers/Phd/pugh.pdf
-  -- page 116 for optimal formula and coefficients. Theoretical accuracy of 
+  -- page 116 for optimal formula and coefficients. Theoretical accuracy of
   -- 16 digits is likely in practice to be around 14.
   -- Domain: R except 0 and negative integers.
-  dngamma = function(z)  
+  dngamma = function(z)
     -- Reflection formula to handle negative z plane.
-    -- Better to branch at z < 0 as some probabilistic use cases only consider 
+    -- Better to branch at z < 0 as some probabilistic use cases only consider
     -- the case z >= 0.
-    if z < 0 then 
-      return pi/((pi*z):sin()*dngamma(1 - z)) 
-    end  
+    if z < 0 then
+      return pi/((pi*z):sin()*dngamma(1 - z))
+    end
     local sum = gamma_dk[0]
     sum = sum + gamma_dk[1]/(z + 0)
-    sum = sum + gamma_dk[2]/(z + 1) 
-    sum = sum + gamma_dk[3]/(z + 2) 
-    sum = sum + gamma_dk[4]/(z + 3) 
-    sum = sum + gamma_dk[5]/(z + 4) 
-    sum = sum + gamma_dk[6]/(z + 5) 
-    sum = sum + gamma_dk[7]/(z + 6) 
-    sum = sum + gamma_dk[8]/(z + 7) 
-    sum = sum + gamma_dk[9]/(z + 8) 
-    sum = sum + gamma_dk[10]/(z + 9)  
+    sum = sum + gamma_dk[2]/(z + 1)
+    sum = sum + gamma_dk[3]/(z + 2)
+    sum = sum + gamma_dk[4]/(z + 3)
+    sum = sum + gamma_dk[5]/(z + 4)
+    sum = sum + gamma_dk[6]/(z + 5)
+    sum = sum + gamma_dk[7]/(z + 6)
+    sum = sum + gamma_dk[8]/(z + 7)
+    sum = sum + gamma_dk[9]/(z + 8)
+    sum = sum + gamma_dk[10]/(z + 9)
     return gamma_c*((z  + gamma_r10 - 0.5)/exp(1))^(z - 0.5)*sum
   end
 
   -- Returns log(abs(gamma(z))).
   -- Domain: R except 0 and negative integers.
   dnloggamma = function(z)
-    if z < 0 then 
-      return log(pi) - (pi*z):sin():abs():log() - dnloggamma(1 - z) 
-    end  
+    if z < 0 then
+      return log(pi) - (pi*z):sin():abs():log() - dnloggamma(1 - z)
+    end
     local sum = gamma_dk[0]
     sum = sum + gamma_dk[1]/(z + 0)
-    sum = sum + gamma_dk[2]/(z + 1) 
-    sum = sum + gamma_dk[3]/(z + 2) 
-    sum = sum + gamma_dk[4]/(z + 3) 
-    sum = sum + gamma_dk[5]/(z + 4) 
-    sum = sum + gamma_dk[6]/(z + 5) 
-    sum = sum + gamma_dk[7]/(z + 6) 
-    sum = sum + gamma_dk[8]/(z + 7) 
-    sum = sum + gamma_dk[9]/(z + 8) 
-    sum = sum + gamma_dk[10]/(z + 9) 
+    sum = sum + gamma_dk[2]/(z + 1)
+    sum = sum + gamma_dk[3]/(z + 2)
+    sum = sum + gamma_dk[4]/(z + 3)
+    sum = sum + gamma_dk[5]/(z + 4)
+    sum = sum + gamma_dk[6]/(z + 5)
+    sum = sum + gamma_dk[7]/(z + 6)
+    sum = sum + gamma_dk[8]/(z + 7)
+    sum = sum + gamma_dk[9]/(z + 8)
+    sum = sum + gamma_dk[10]/(z + 9)
     -- For z >= 0 gamma function is positive, no abs() required.
     return log(gamma_c) + (z - 0.5)*(z  + gamma_r10 - 0.5):log()
       - (z - 0.5) + sum:log()
@@ -168,11 +168,11 @@ local dn_mt = {
   __pow = function(x, y) -- Optimized version.
     if type(y) == "number" then
       return dn(x._v^y, y*x._v^(y-1)*x._a)
-    elseif type(x) == "number" then
-      return dn(x^y._v, x^y._v*log(x)*y._a)
-    else
-      return dn(x._v^y._v, x._v^y._v*(log(x._v)*y._a + y._v/x._v*x._a))
-    end
+  elseif type(x) == "number" then
+    return dn(x^y._v, x^y._v*log(x)*y._a)
+  else
+    return dn(x._v^y._v, x._v^y._v*(log(x._v)*y._a + y._v/x._v*x._a))
+  end
   end,
   __eq = function(x, y) x, y = dn(x), dn(y)
     return x._v == y._v
@@ -184,23 +184,23 @@ local dn_mt = {
     return x._v <= y._v
   end,
   __tostring = function(x)
-    return tostring(x._v) -- Better to mimic behavior of numbers.
+    return "(v = " .. tostring(x._v) .. ", a = " .. tostring(x._a) .. ")"
   end,
   __tonumber = function(x) -- Honored only by xsys.string.width.
     return tonumber(x._v)
   end,
-  
+
   copy = function(x)
     return dn(x)
   end,
-  
+
   val = function(x)
     return x._v
   end,
   adj = function(x)
     return x._a
   end,
-  
+
   sin  = function(x) return dn(sin(x._v),  x._a*cos(x._v)) end,
   cos  = function(x) return dn(cos(x._v),  x._a*(-sin(x._v))) end,
   tan  = function(x) return dn(tan(x._v),  x._a*(1 + tan(x._v)^2)) end,
@@ -212,7 +212,11 @@ local dn_mt = {
   tanh = function(x) return dn(tanh(x._v), x._a*(1 - tanh(x._v)^2)) end,
   exp  = function(x) return dn(exp(x._v),  x._a*exp(x._v)) end,
   log  = function(x) return dn(log(x._v),  x._a/x._v) end,
-  sqrt = function(x) return dn(sqrt(x._v), x._a/(2*sqrt(x._v))) end,
+  sqrt = function(x)
+    local denom = 2 * sqrt(x._v)
+    local adj = (denom == 0) and 0.0 or (x._a / denom)
+    return dn(sqrt(x._v), adj)
+  end,
   abs  = function(x) return dn(abs(x._v),  x._a*sign(x._v)) end,
   -- Stick to dn type to improve type stability:
   floor = function(x) return dn(floor(x._v), 0) end,
@@ -221,10 +225,10 @@ local dn_mt = {
   round = function(x) return dn(round(x._v), 0) end,
   step  = function(x) return dn(step(x._v),  0) end,
   sign  = function(x) return dn(sign(x._v),  0) end,
-  
+
   gamma    = function(x) return    dngamma(x) end,
   loggamma = function(x) return dnloggamma(x) end,
-  
+
   beta     = function(x, y) return    dnbeta(x, y) end,
   logbeta  = function(x, y) return dnlogbeta(x, y) end,
 
@@ -241,7 +245,7 @@ dn_mt.__index = dn_mt
 dn = ffi.metatype("struct { double _v, _a; }", dn_mt)
 
 -- To improve type stability we always pass all arguments wrt differentiation
--- will take place as dual numbers, only one of which will have adj part 
+-- will take place as dual numbers, only one of which will have adj part
 -- equal to 1.
 local pderf_template = xsys.template[[
 local f, dn = f, dn
@@ -272,7 +276,7 @@ local function derivativef(f, n, ...)
   local dxi
   if select("#", ...) == 0 then
     dxi = { }
-    for i=1,n do 
+    for i=1,n do
       dxi[i] = i
     end
   else
@@ -287,8 +291,8 @@ local function derivativef(f, n, ...)
 end
 
 -- For forward mode differentiation we could just use grad(f, x, y) to return
--- f(x) and set y to the gradient of f(x), but gradients are best computed in 
--- reverse mode differentiation, and a stack will need to be allocated for f, 
+-- f(x) and set y to the gradient of f(x), but gradients are best computed in
+-- reverse mode differentiation, and a stack will need to be allocated for f,
 -- the length of which (it's growth-able) likely depends on the f itself hence
 -- it's best stored via a closure.
 local function gradientf(f, n)
